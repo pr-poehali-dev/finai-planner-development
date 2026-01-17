@@ -2,9 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -12,6 +10,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
+import DashboardTab from '@/components/DashboardTab';
+import AnalyticsTab from '@/components/AnalyticsTab';
+import TransactionsTab from '@/components/TransactionsTab';
+import AIRecommendationsTab from '@/components/AIRecommendationsTab';
 
 const Index = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -50,8 +52,6 @@ const Index = () => {
     { month: 'Дек', income: 160000, expenses: 105000 },
     { month: 'Янв', income: 150000, expenses: 98450 },
   ];
-
-  const maxValue = Math.max(...monthlyData.flatMap(d => [d.income, d.expenses]));
 
   const categories = [
     { name: 'Продукты', amount: 28500, percent: 29, color: 'bg-gradient-to-r from-purple-500 to-pink-500', icon: 'ShoppingCart' },
@@ -219,316 +219,33 @@ const Index = () => {
           </header>
 
           {activeTab === 'dashboard' && (
-            <>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
-                <Card className="lg:col-span-2 border-2 hover:border-primary/50 transition-all duration-300 animate-scale-in rounded-3xl overflow-hidden bg-gradient-to-br from-card via-card to-primary/5">
-                  <CardHeader className="pb-3 sm:pb-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardDescription className="text-xs sm:text-sm">Общий баланс</CardDescription>
-                        <CardTitle className="text-3xl sm:text-5xl font-bold mt-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                          {totalBalance.toLocaleString()} {currencySymbols[currency]}
-                        </CardTitle>
-                      </div>
-                      <div className="bg-gradient-to-br from-primary to-secondary p-3 sm:p-4 rounded-3xl">
-                        <Icon name="Wallet" size={24} className="text-primary-foreground sm:w-8 sm:h-8" />
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-3 sm:gap-6 mt-2 sm:mt-4">
-                      <div className="bg-success/10 backdrop-blur-sm rounded-2xl p-3 sm:p-4 border border-success/20">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                          <div className="bg-success/20 p-1.5 sm:p-2 rounded-xl">
-                            <Icon name="ArrowDownToLine" size={16} className="text-success sm:w-5 sm:h-5" />
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground">Доходы</p>
-                            <p className="text-lg sm:text-2xl font-bold text-success">+{(monthlyIncome / 1000).toFixed(0)}K</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-destructive/10 backdrop-blur-sm rounded-2xl p-3 sm:p-4 border border-destructive/20">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                          <div className="bg-destructive/20 p-1.5 sm:p-2 rounded-xl">
-                            <Icon name="ArrowUpFromLine" size={16} className="text-destructive sm:w-5 sm:h-5" />
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground">Расходы</p>
-                            <p className="text-lg sm:text-2xl font-bold text-destructive">-{(monthlyExpenses / 1000).toFixed(0)}K</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-2 hover:border-accent/50 transition-all duration-300 animate-scale-in rounded-3xl overflow-hidden bg-gradient-to-br from-card via-card to-accent/5" style={{ animationDelay: '100ms' }}>
-                  <CardHeader className="pb-3 sm:pb-6">
-                    <CardDescription className="text-xs sm:text-sm">Цель сбережений</CardDescription>
-                    <CardTitle className="text-xl sm:text-2xl font-bold">
-                      {savingsGoal.toLocaleString()} {currencySymbols[currency]}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <div className="flex justify-between mb-2">
-                          <span className="text-xs sm:text-sm text-muted-foreground">Прогресс</span>
-                          <span className="text-xs sm:text-sm font-semibold">{Math.round((currentSavings / savingsGoal) * 100)}%</span>
-                        </div>
-                        <Progress value={(currentSavings / savingsGoal) * 100} className="h-2 sm:h-3 rounded-full" />
-                      </div>
-                      <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                        <Icon name="Target" size={14} className="sm:w-4 sm:h-4" />
-                        <span>Осталось: {(savingsGoal - currentSavings).toLocaleString()} {currencySymbols[currency]}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card className="border-2 rounded-3xl overflow-hidden animate-slide-up mb-4 sm:mb-6">
-                <CardHeader className="pb-3 sm:pb-6">
-                  <CardTitle className="flex items-center gap-2 text-lg sm:text-2xl">
-                    <Icon name="TrendingUp" size={20} className="text-primary sm:w-6 sm:h-6" />
-                    Динамика доходов и расходов
-                  </CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">6 месяцев</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-4 sm:gap-6 text-xs sm:text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-gradient-to-r from-success to-emerald-400"></div>
-                        <span>Доходы</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-gradient-to-r from-destructive to-orange-400"></div>
-                        <span>Расходы</span>
-                      </div>
-                    </div>
-
-                    <div className="relative h-48 sm:h-64">
-                      <div className="absolute inset-0 flex items-end justify-between gap-2 sm:gap-4">
-                        {monthlyData.map((data, index) => (
-                          <div key={data.month} className="flex-1 flex flex-col items-center gap-2 animate-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
-                            <div className="w-full flex gap-1 items-end">
-                              <div
-                                className="flex-1 bg-gradient-to-t from-success to-emerald-400 rounded-t-lg transition-all duration-500 hover:opacity-80 cursor-pointer relative group"
-                                style={{ height: `${(data.income / maxValue) * 100}%` }}
-                              >
-                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-success text-white text-xs px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                                  {(data.income / 1000).toFixed(0)}K
-                                </div>
-                              </div>
-                              <div
-                                className="flex-1 bg-gradient-to-t from-destructive to-orange-400 rounded-t-lg transition-all duration-500 hover:opacity-80 cursor-pointer relative group"
-                                style={{ height: `${(data.expenses / maxValue) * 100}%` }}
-                              >
-                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-destructive text-white text-xs px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                                  {(data.expenses / 1000).toFixed(0)}K
-                                </div>
-                              </div>
-                            </div>
-                            <span className="text-xs text-muted-foreground font-medium">{data.month}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </>
+            <DashboardTab
+              totalBalance={totalBalance}
+              monthlyIncome={monthlyIncome}
+              monthlyExpenses={monthlyExpenses}
+              savingsGoal={savingsGoal}
+              currentSavings={currentSavings}
+              currencySymbol={currencySymbols[currency]}
+              monthlyData={monthlyData}
+            />
           )}
 
           {activeTab === 'analytics' && (
-            <Card className="border-2 rounded-3xl overflow-hidden animate-slide-up">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Icon name="PieChart" size={24} className="text-primary" />
-                  Анализ расходов
-                </CardTitle>
-                <CardDescription>Распределение по категориям за месяц</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {categories.map((category, index) => (
-                    <div key={category.name} className="animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-3">
-                          <div className={`${category.color} p-2 rounded-xl`}>
-                            <Icon name={category.icon as any} size={18} className="text-white" />
-                          </div>
-                          <span className="font-medium text-sm sm:text-base">{category.name}</span>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-sm sm:text-base">{category.amount.toLocaleString()} {currencySymbols[currency]}</p>
-                          <p className="text-xs text-muted-foreground">{category.percent}%</p>
-                        </div>
-                      </div>
-                      <Progress value={category.percent} className="h-2 rounded-full" />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <AnalyticsTab
+              categories={categories}
+              currencySymbol={currencySymbols[currency]}
+            />
           )}
 
           {activeTab === 'transactions' && (
-            <Card className="border-2 rounded-3xl overflow-hidden animate-slide-up">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Icon name="History" size={24} className="text-primary" />
-                  Последние транзакции
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="all" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3 rounded-2xl">
-                    <TabsTrigger value="all" className="rounded-xl text-xs sm:text-sm">Все</TabsTrigger>
-                    <TabsTrigger value="income" className="rounded-xl text-xs sm:text-sm">Доходы</TabsTrigger>
-                    <TabsTrigger value="expenses" className="rounded-xl text-xs sm:text-sm">Расходы</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="all" className="mt-6">
-                    <div className="space-y-3">
-                      {recentTransactions.map((transaction, index) => (
-                        <div
-                          key={transaction.id}
-                          className="flex items-center justify-between p-3 sm:p-4 rounded-2xl bg-muted/50 hover:bg-muted transition-all duration-300 cursor-pointer animate-fade-in"
-                          style={{ animationDelay: `${index * 100}ms` }}
-                        >
-                          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                            <div className={`p-2 sm:p-3 rounded-xl flex-shrink-0 ${transaction.amount > 0 ? 'bg-success/20' : 'bg-muted'}`}>
-                              <Icon name={transaction.icon as any} size={18} className={transaction.amount > 0 ? 'text-success' : 'text-muted-foreground sm:w-5 sm:h-5'} />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="font-medium text-sm sm:text-base truncate">{transaction.title}</p>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Badge variant="outline" className="rounded-full text-xs">
-                                  {transaction.category}
-                                </Badge>
-                                <span className="text-xs text-muted-foreground">{transaction.date}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <p className={`text-base sm:text-xl font-bold flex-shrink-0 ml-2 ${transaction.amount > 0 ? 'text-success' : 'text-foreground'}`}>
-                            {transaction.amount > 0 ? '+' : ''}
-                            {transaction.amount.toLocaleString()} {currencySymbols[currency]}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="income">
-                    <div className="space-y-3">
-                      {recentTransactions.filter(t => t.amount > 0).map((transaction, index) => (
-                        <div
-                          key={transaction.id}
-                          className="flex items-center justify-between p-3 sm:p-4 rounded-2xl bg-muted/50 hover:bg-muted transition-all duration-300 cursor-pointer animate-fade-in"
-                          style={{ animationDelay: `${index * 100}ms` }}
-                        >
-                          <div className="flex items-center gap-3 sm:gap-4">
-                            <div className="p-2 sm:p-3 rounded-xl bg-success/20">
-                              <Icon name={transaction.icon as any} size={18} className="text-success sm:w-5 sm:h-5" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-sm sm:text-base">{transaction.title}</p>
-                              <span className="text-xs text-muted-foreground">{transaction.date}</span>
-                            </div>
-                          </div>
-                          <p className="text-base sm:text-xl font-bold text-success">
-                            +{transaction.amount.toLocaleString()} {currencySymbols[currency]}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="expenses">
-                    <div className="space-y-3">
-                      {recentTransactions.filter(t => t.amount < 0).map((transaction, index) => (
-                        <div
-                          key={transaction.id}
-                          className="flex items-center justify-between p-3 sm:p-4 rounded-2xl bg-muted/50 hover:bg-muted transition-all duration-300 cursor-pointer animate-fade-in"
-                          style={{ animationDelay: `${index * 100}ms` }}
-                        >
-                          <div className="flex items-center gap-3 sm:gap-4">
-                            <div className="p-2 sm:p-3 rounded-xl bg-muted">
-                              <Icon name={transaction.icon as any} size={18} className="text-muted-foreground sm:w-5 sm:h-5" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-sm sm:text-base">{transaction.title}</p>
-                              <span className="text-xs text-muted-foreground">{transaction.date}</span>
-                            </div>
-                          </div>
-                          <p className="text-base sm:text-xl font-bold">
-                            {transaction.amount.toLocaleString()} {currencySymbols[currency]}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
+            <TransactionsTab
+              transactions={recentTransactions}
+              currencySymbol={currencySymbols[currency]}
+            />
           )}
 
           {activeTab === 'ai' && (
-            <Card className="border-2 rounded-3xl overflow-hidden animate-slide-up">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Icon name="Sparkles" size={24} className="text-secondary" />
-                  AI-Рекомендации
-                </CardTitle>
-                <CardDescription>Персональные советы по управлению финансами</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {aiRecommendations.map((rec, index) => (
-                    <div
-                      key={index}
-                      className={`p-4 rounded-2xl border-2 transition-all duration-300 hover:scale-[1.02] cursor-pointer animate-fade-in ${
-                        rec.type === 'warning'
-                          ? 'bg-accent/5 border-accent/30 hover:border-accent'
-                          : rec.type === 'success'
-                          ? 'bg-success/5 border-success/30 hover:border-success'
-                          : 'bg-primary/5 border-primary/30 hover:border-primary'
-                      }`}
-                      style={{ animationDelay: `${index * 150}ms` }}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div
-                          className={`p-2 rounded-xl flex-shrink-0 ${
-                            rec.type === 'warning'
-                              ? 'bg-accent/20'
-                              : rec.type === 'success'
-                              ? 'bg-success/20'
-                              : 'bg-primary/20'
-                          }`}
-                        >
-                          <Icon
-                            name={rec.icon as any}
-                            size={20}
-                            className={
-                              rec.type === 'warning'
-                                ? 'text-accent'
-                                : rec.type === 'success'
-                                ? 'text-success'
-                                : 'text-primary'
-                            }
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold mb-1 text-sm sm:text-base">{rec.title}</h4>
-                          <p className="text-xs sm:text-sm text-muted-foreground">{rec.description}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <AIRecommendationsTab recommendations={aiRecommendations} />
           )}
         </div>
 
@@ -663,188 +380,18 @@ const Index = () => {
         <div className="hidden md:block">
           <div className="container mx-auto px-4 max-w-7xl mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="border-2 rounded-3xl overflow-hidden animate-slide-up">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Icon name="PieChart" size={24} className="text-primary" />
-                    Анализ расходов
-                  </CardTitle>
-                  <CardDescription>Распределение по категориям за месяц</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {categories.map((category, index) => (
-                      <div key={category.name} className="animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-3">
-                            <div className={`${category.color} p-2 rounded-xl`}>
-                              <Icon name={category.icon as any} size={18} className="text-white" />
-                            </div>
-                            <span className="font-medium">{category.name}</span>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-semibold">{category.amount.toLocaleString()} {currencySymbols[currency]}</p>
-                            <p className="text-xs text-muted-foreground">{category.percent}%</p>
-                          </div>
-                        </div>
-                        <Progress value={category.percent} className="h-2 rounded-full" />
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <AnalyticsTab
+                categories={categories}
+                currencySymbol={currencySymbols[currency]}
+              />
 
-              <Card className="border-2 rounded-3xl overflow-hidden animate-slide-up" style={{ animationDelay: '100ms' }}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Icon name="Sparkles" size={24} className="text-secondary" />
-                    AI-Рекомендации
-                  </CardTitle>
-                  <CardDescription>Персональные советы по управлению финансами</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {aiRecommendations.map((rec, index) => (
-                      <div
-                        key={index}
-                        className={`p-4 rounded-2xl border-2 transition-all duration-300 hover:scale-[1.02] cursor-pointer animate-fade-in ${
-                          rec.type === 'warning'
-                            ? 'bg-accent/5 border-accent/30 hover:border-accent'
-                            : rec.type === 'success'
-                            ? 'bg-success/5 border-success/30 hover:border-success'
-                            : 'bg-primary/5 border-primary/30 hover:border-primary'
-                        }`}
-                        style={{ animationDelay: `${index * 150}ms` }}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div
-                            className={`p-2 rounded-xl ${
-                              rec.type === 'warning'
-                                ? 'bg-accent/20'
-                                : rec.type === 'success'
-                                ? 'bg-success/20'
-                                : 'bg-primary/20'
-                            }`}
-                          >
-                            <Icon
-                              name={rec.icon as any}
-                              size={20}
-                              className={
-                                rec.type === 'warning'
-                                  ? 'text-accent'
-                                  : rec.type === 'success'
-                                  ? 'text-success'
-                                  : 'text-primary'
-                              }
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-semibold mb-1">{rec.title}</h4>
-                            <p className="text-sm text-muted-foreground">{rec.description}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <AIRecommendationsTab recommendations={aiRecommendations} />
             </div>
 
-            <Card className="border-2 rounded-3xl overflow-hidden animate-slide-up mt-6" style={{ animationDelay: '200ms' }}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Icon name="History" size={24} className="text-primary" />
-                  Последние транзакции
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="all" className="w-full">
-                  <TabsList className="grid w-full max-w-md grid-cols-3 rounded-2xl">
-                    <TabsTrigger value="all" className="rounded-xl">Все</TabsTrigger>
-                    <TabsTrigger value="income" className="rounded-xl">Доходы</TabsTrigger>
-                    <TabsTrigger value="expenses" className="rounded-xl">Расходы</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="all" className="mt-6">
-                    <div className="space-y-3">
-                      {recentTransactions.map((transaction, index) => (
-                        <div
-                          key={transaction.id}
-                          className="flex items-center justify-between p-4 rounded-2xl bg-muted/50 hover:bg-muted transition-all duration-300 cursor-pointer animate-fade-in"
-                          style={{ animationDelay: `${index * 100}ms` }}
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className={`p-3 rounded-xl ${transaction.amount > 0 ? 'bg-success/20' : 'bg-muted'}`}>
-                              <Icon name={transaction.icon as any} size={20} className={transaction.amount > 0 ? 'text-success' : 'text-muted-foreground'} />
-                            </div>
-                            <div>
-                              <p className="font-medium">{transaction.title}</p>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Badge variant="outline" className="rounded-full text-xs">
-                                  {transaction.category}
-                                </Badge>
-                                <span className="text-xs text-muted-foreground">{transaction.date}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <p className={`text-xl font-bold ${transaction.amount > 0 ? 'text-success' : 'text-foreground'}`}>
-                            {transaction.amount > 0 ? '+' : ''}
-                            {transaction.amount.toLocaleString()} {currencySymbols[currency]}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="income">
-                    <div className="space-y-3">
-                      {recentTransactions.filter(t => t.amount > 0).map((transaction, index) => (
-                        <div
-                          key={transaction.id}
-                          className="flex items-center justify-between p-4 rounded-2xl bg-muted/50 hover:bg-muted transition-all duration-300 cursor-pointer"
-                          style={{ animationDelay: `${index * 100}ms` }}
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="p-3 rounded-xl bg-success/20">
-                              <Icon name={transaction.icon as any} size={20} className="text-success" />
-                            </div>
-                            <div>
-                              <p className="font-medium">{transaction.title}</p>
-                              <span className="text-xs text-muted-foreground">{transaction.date}</span>
-                            </div>
-                          </div>
-                          <p className="text-xl font-bold text-success">
-                            +{transaction.amount.toLocaleString()} {currencySymbols[currency]}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="expenses">
-                    <div className="space-y-3">
-                      {recentTransactions.filter(t => t.amount < 0).map((transaction, index) => (
-                        <div
-                          key={transaction.id}
-                          className="flex items-center justify-between p-4 rounded-2xl bg-muted/50 hover:bg-muted transition-all duration-300 cursor-pointer"
-                          style={{ animationDelay: `${index * 100}ms` }}
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="p-3 rounded-xl bg-muted">
-                              <Icon name={transaction.icon as any} size={20} className="text-muted-foreground" />
-                            </div>
-                            <div>
-                              <p className="font-medium">{transaction.title}</p>
-                              <span className="text-xs text-muted-foreground">{transaction.date}</span>
-                            </div>
-                          </div>
-                          <p className="text-xl font-bold">
-                            {transaction.amount.toLocaleString()} {currencySymbols[currency]}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
+            <TransactionsTab
+              transactions={recentTransactions}
+              currencySymbol={currencySymbols[currency]}
+            />
 
             <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in" style={{ animationDelay: '300ms' }}>
               <Dialog open={isAddTransactionOpen} onOpenChange={setIsAddTransactionOpen}>
