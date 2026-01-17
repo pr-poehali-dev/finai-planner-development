@@ -6,12 +6,24 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 
 const Index = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [currency, setCurrency] = useState<'RUB' | 'USD' | 'EUR'>('RUB');
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
+  const [newTransaction, setNewTransaction] = useState({
+    title: '',
+    amount: '',
+    category: '',
+    type: 'expense' as 'income' | 'expense'
+  });
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
@@ -49,13 +61,56 @@ const Index = () => {
     { name: 'Сбережения', amount: 7500, percent: 8, color: 'bg-gradient-to-r from-indigo-500 to-purple-500', icon: 'PiggyBank' },
   ];
 
-  const recentTransactions = [
+  const [recentTransactions, setRecentTransactions] = useState([
     { id: 1, title: 'Покупка продуктов', amount: -4500, category: 'Продукты', date: '18 янв', icon: 'ShoppingCart' },
     { id: 2, title: 'Зарплата', amount: 150000, category: 'Доход', date: '15 янв', icon: 'TrendingUp' },
     { id: 3, title: 'Оплата аренды', amount: -35000, category: 'Жильё', date: '12 янв', icon: 'Home' },
     { id: 4, title: 'Заправка авто', amount: -3200, category: 'Транспорт', date: '10 янв', icon: 'Car' },
     { id: 5, title: 'Фриланс проект', amount: 25000, category: 'Доход', date: '8 янв', icon: 'Briefcase' },
-  ];
+  ]);
+
+  const handleAddTransaction = () => {
+    if (!newTransaction.title || !newTransaction.amount || !newTransaction.category) {
+      toast({
+        title: 'Ошибка',
+        description: 'Заполните все поля',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    const amount = parseFloat(newTransaction.amount);
+    const finalAmount = newTransaction.type === 'expense' ? -Math.abs(amount) : Math.abs(amount);
+    
+    const categoryIcons: Record<string, string> = {
+      'Продукты': 'ShoppingCart',
+      'Жильё': 'Home',
+      'Транспорт': 'Car',
+      'Развлечения': 'Sparkles',
+      'Сбережения': 'PiggyBank',
+      'Доход': 'TrendingUp',
+      'Зарплата': 'Briefcase',
+      'Другое': 'DollarSign'
+    };
+
+    const transaction = {
+      id: Date.now(),
+      title: newTransaction.title,
+      amount: finalAmount,
+      category: newTransaction.category,
+      date: new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }),
+      icon: categoryIcons[newTransaction.category] || 'DollarSign'
+    };
+
+    setRecentTransactions([transaction, ...recentTransactions]);
+    setIsAddTransactionOpen(false);
+    setNewTransaction({ title: '', amount: '', category: '', type: 'expense' });
+    
+    toast({
+      title: 'Успешно!',
+      description: 'Транзакция добавлена',
+    });
+  };
 
   const aiRecommendations = [
     {
@@ -477,6 +532,115 @@ const Index = () => {
           )}
         </div>
 
+        <Dialog open={isAddTransactionOpen} onOpenChange={setIsAddTransactionOpen}>
+          <DialogTrigger asChild>
+            <Button 
+              size="icon"
+              className="fixed bottom-20 right-4 w-16 h-16 rounded-full shadow-2xl bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-all duration-300 hover:scale-110 md:hidden z-40 animate-scale-in"
+            >
+              <Icon name="Plus" size={28} className="text-primary-foreground" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md rounded-3xl mx-4">
+            <DialogHeader>
+              <DialogTitle>Новая транзакция</DialogTitle>
+              <DialogDescription>
+                Добавьте доход или расход в ваш бюджет
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="type-mobile">Тип транзакции</Label>
+                <Select
+                  value={newTransaction.type}
+                  onValueChange={(value: 'income' | 'expense') => 
+                    setNewTransaction({ ...newTransaction, type: value })
+                  }
+                >
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="expense">Расход</SelectItem>
+                    <SelectItem value="income">Доход</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="title-mobile">Название</Label>
+                <Input
+                  id="title-mobile"
+                  placeholder="Например: Покупка продуктов"
+                  className="rounded-xl"
+                  value={newTransaction.title}
+                  onChange={(e) => setNewTransaction({ ...newTransaction, title: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="amount-mobile">Сумма ({currencySymbols[currency]})</Label>
+                <Input
+                  id="amount-mobile"
+                  type="number"
+                  placeholder="0"
+                  className="rounded-xl"
+                  value={newTransaction.amount}
+                  onChange={(e) => setNewTransaction({ ...newTransaction, amount: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="category-mobile">Категория</Label>
+                <Select
+                  value={newTransaction.category}
+                  onValueChange={(value) => 
+                    setNewTransaction({ ...newTransaction, category: value })
+                  }
+                >
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue placeholder="Выберите категорию" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {newTransaction.type === 'expense' ? (
+                      <>
+                        <SelectItem value="Продукты">🛒 Продукты</SelectItem>
+                        <SelectItem value="Жильё">🏠 Жильё</SelectItem>
+                        <SelectItem value="Транспорт">🚗 Транспорт</SelectItem>
+                        <SelectItem value="Развлечения">✨ Развлечения</SelectItem>
+                        <SelectItem value="Сбережения">🐷 Сбережения</SelectItem>
+                        <SelectItem value="Другое">💰 Другое</SelectItem>
+                      </>
+                    ) : (
+                      <>
+                        <SelectItem value="Зарплата">💼 Зарплата</SelectItem>
+                        <SelectItem value="Доход">📈 Доход</SelectItem>
+                        <SelectItem value="Другое">💰 Другое</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setIsAddTransactionOpen(false)}
+                className="flex-1 rounded-xl"
+              >
+                Отмена
+              </Button>
+              <Button
+                onClick={handleAddTransaction}
+                className="flex-1 rounded-xl bg-gradient-to-r from-primary to-secondary"
+              >
+                Добавить
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border md:hidden z-50">
           <div className="grid grid-cols-4 gap-1 px-2 py-3">
             {navItems.map((item) => (
@@ -683,10 +847,112 @@ const Index = () => {
             </Card>
 
             <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in" style={{ animationDelay: '300ms' }}>
-              <Button className="h-14 text-base font-semibold rounded-2xl bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity">
-                <Icon name="Plus" size={20} className="mr-2" />
-                Добавить транзакцию
-              </Button>
+              <Dialog open={isAddTransactionOpen} onOpenChange={setIsAddTransactionOpen}>
+                <DialogTrigger asChild>
+                  <Button className="h-14 text-base font-semibold rounded-2xl bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity">
+                    <Icon name="Plus" size={20} className="mr-2" />
+                    Добавить транзакцию
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md rounded-3xl">
+                  <DialogHeader>
+                    <DialogTitle>Новая транзакция</DialogTitle>
+                    <DialogDescription>
+                      Добавьте доход или расход в ваш бюджет
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="type">Тип транзакции</Label>
+                      <Select
+                        value={newTransaction.type}
+                        onValueChange={(value: 'income' | 'expense') => 
+                          setNewTransaction({ ...newTransaction, type: value })
+                        }
+                      >
+                        <SelectTrigger className="rounded-xl">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="expense">Расход</SelectItem>
+                          <SelectItem value="income">Доход</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Название</Label>
+                      <Input
+                        id="title"
+                        placeholder="Например: Покупка продуктов"
+                        className="rounded-xl"
+                        value={newTransaction.title}
+                        onChange={(e) => setNewTransaction({ ...newTransaction, title: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="amount">Сумма ({currencySymbols[currency]})</Label>
+                      <Input
+                        id="amount"
+                        type="number"
+                        placeholder="0"
+                        className="rounded-xl"
+                        value={newTransaction.amount}
+                        onChange={(e) => setNewTransaction({ ...newTransaction, amount: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="category">Категория</Label>
+                      <Select
+                        value={newTransaction.category}
+                        onValueChange={(value) => 
+                          setNewTransaction({ ...newTransaction, category: value })
+                        }
+                      >
+                        <SelectTrigger className="rounded-xl">
+                          <SelectValue placeholder="Выберите категорию" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {newTransaction.type === 'expense' ? (
+                            <>
+                              <SelectItem value="Продукты">🛒 Продукты</SelectItem>
+                              <SelectItem value="Жильё">🏠 Жильё</SelectItem>
+                              <SelectItem value="Транспорт">🚗 Транспорт</SelectItem>
+                              <SelectItem value="Развлечения">✨ Развлечения</SelectItem>
+                              <SelectItem value="Сбережения">🐷 Сбережения</SelectItem>
+                              <SelectItem value="Другое">💰 Другое</SelectItem>
+                            </>
+                          ) : (
+                            <>
+                              <SelectItem value="Зарплата">💼 Зарплата</SelectItem>
+                              <SelectItem value="Доход">📈 Доход</SelectItem>
+                              <SelectItem value="Другое">💰 Другое</SelectItem>
+                            </>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsAddTransactionOpen(false)}
+                      className="flex-1 rounded-xl"
+                    >
+                      Отмена
+                    </Button>
+                    <Button
+                      onClick={handleAddTransaction}
+                      className="flex-1 rounded-xl bg-gradient-to-r from-primary to-secondary"
+                    >
+                      Добавить
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
               <Button variant="outline" className="h-14 text-base font-semibold rounded-2xl border-2">
                 <Icon name="Upload" size={20} className="mr-2" />
                 Импорт выписки
